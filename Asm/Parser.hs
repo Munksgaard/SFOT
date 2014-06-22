@@ -117,3 +117,14 @@ lda = do
       ldaParsers' = [immediate LdaI, zeroPage LdaZ, zeroPageX LdaZX,
                      absolute LdaA, absoluteX LdaAX, absoluteY LdaAY,
                      indirectX LdaIX, indirectY LdaIY]
+
+sta :: Parser Operation
+sta = do
+  string "STA"
+  spaces
+  choice staParsers
+    where
+      staParsers = map (liftM STA) staParsers'
+      staParsers' = [zeroPage StaZ, zeroPageX StaZX, absolute StaA,
+                     absoluteX StaAX, absoluteY StaAY, indirectX StaIX,
+                     indirectY StaIY]
