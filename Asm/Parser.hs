@@ -134,3 +134,9 @@ comment = do
   char ';'
   manyTill anyChar (void newline <|> eof)
   return ()
+
+program :: Parser Program
+program = do
+  prgm <- choice [lda, sta] `endBy` many (void space <|> comment)
+  eof
+  return prgm
