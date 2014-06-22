@@ -128,3 +128,9 @@ sta = do
       staParsers' = [zeroPage StaZ, zeroPageX StaZX, absolute StaA,
                      absoluteX StaAX, absoluteY StaAY, indirectX StaIX,
                      indirectY StaIY]
+
+comment :: Parser ()
+comment = do
+  char ';'
+  manyTill anyChar (void newline <|> eof)
+  return ()
