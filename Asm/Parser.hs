@@ -22,15 +22,6 @@ hex = do
 number :: Parser Int
 number = hex <|> dec
 
-immediate :: Parser Immediate
-immediate = do
-  char '#'
-  num <- number
-  if num <= 0xff then
-      return $ fromIntegral num
-  else
-      fail "Number too big"
-
 byteAddr :: Parser ByteAddr
 byteAddr = do
   num <- number
@@ -47,37 +38,74 @@ wordAddr = do
   else
       fail "Only supports 16 bit addresses"
 
-ldaImm :: Parser Lda
-ldaImm = do
-  imm <- immediate
-  return $ LdaI imm
+commaRegister :: Char -> Parser ()
+commaRegister c = do
+  spaces
+  char ','
+  spaces
+  char c
+  return ()
 
-ldaZ :: Parser Lda
-ldaZ = do
-  byte <- byteAddr
-  option (LdaZ byte)
-       (do string ",X"
-           return $ LdaZX byte)
+immediate :: (ByteAddr -> a) -> Parser a
+immediate f = do
+  char '#'
+  num <- number
+  if num <= 0xff then
+      return $ f $ fromIntegral num
+  else
+      fail "Number too big"
 
-regXOrY :: (a -> Lda) -> (a -> Lda) -> a -> Parser Lda
-regXOrY f1 f2 x = char ',' >>
-  (do try $ string "X"
-      return $ f1 x
-   <|>
-   do string "Y"
-      return $ f2 x)
+zeroPage :: (ByteAddr -> a) -> Parser a
+zeroPage f = try $ do
+  num <- byteAddr
+  notFollowedBy (spaces >> char ',')
+  return $ f num
 
-ldaA :: Parser Lda
-ldaA = do
-  word <- wordAddr
-  option (LdaA word) $ regXOrY LdaAX LdaAY word
+zeroPageX :: (ByteAddr -> a) -> Parser a
+zeroPageX f = try $ do
+  num <- byteAddr
+  commaRegister 'X'
+  return $ f num
 
-ldaInd :: Parser Lda
-ldaInd = do
+absolute :: (WordAddr -> a) -> Parser a
+absolute f = try $ do
+  num <- wordAddr
+  notFollowedBy (spaces >> char ',')
+  return $ f num
+
+absoluteX :: (WordAddr -> a) -> Parser a
+absoluteX f = try $ do
+  num <- wordAddr
+  commaRegister 'X'
+  return $ f num
+
+absoluteY :: (WordAddr -> a) -> Parser a
+absoluteY f = try $ do
+  num <- wordAddr
+  commaRegister 'Y'
+  return $ f num
+
+startIndirect :: Parser ByteAddr
+startIndirect = do
   char '('
-  byte <- byteAddr
-  (string ",X)" >> return (LdaIX byte)) <|>
-    (string "),Y" >> return (LdaIY byte))
+  spaces
+  byteAddr
+
+indirectX :: (ByteAddr -> a) -> Parser a
+indirectX f = try $ do
+  num <- startIndirect
+  commaRegister 'X'
+  spaces
+  char ')'
+  return $ f num
+
+indirectY :: (ByteAddr -> a) -> Parser a
+indirectY f = try $ do
+  num <- startIndirect
+  spaces
+  char ')'
+  commaRegister 'Y'
+  return $ f num
 
 lda :: Parser Operation
 lda = do
@@ -86,4 +114,6 @@ lda = do
   choice ldaParsers
     where
       ldaParsers = map (liftM LDA) ldaParsers'
-      ldaParsers' = [ldaImm, try ldaZ, try ldaA, ldaInd]
+      ldaParsers' = [immediate LdaI, zeroPage LdaZ, zeroPageX LdaZX,
+                     absolute LdaA, absoluteX LdaAX, absoluteY LdaAY,
+                     indirectX LdaIX, indirectY LdaIY]
