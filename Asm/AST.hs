@@ -11,6 +11,7 @@ type Program = [Operation]
 
 data Operation = LDA Lda
                | STA Sta
+               | ADC Adc
                | INX
                | TAX
                | TXA
@@ -40,9 +41,20 @@ data Sta = StaZ ByteAddr
          | StaIY ByteAddr
            deriving (Show, Eq)
 
+data Adc = AdcI  Immediate
+         | AdcZ  ByteAddr
+         | AdcZX ByteAddr
+         | AdcA  WordAddr
+         | AdcAX WordAddr
+         | AdcAY WordAddr
+         | AdcIX ByteAddr
+         | AdcIY ByteAddr
+           deriving (Show, Eq)
+
 opcode :: Operation -> [Word8]
 opcode (LDA lda) = ldaOpcode lda
 opcode (STA sta) = staOpcode sta
+opcode (ADC adc) = adcOpcode adc
 opcode INX       = [0xE8]
 opcode TAX       = [0xAA]
 opcode TXA       = [0x8A]
@@ -70,6 +82,16 @@ staOpcode (StaAX w16)  = 0x9D : encodeWord16 w16
 staOpcode (StaAY w16)  = 0x99 : encodeWord16 w16
 staOpcode (StaIX  w8)  = 0x81 : encodeWord8   w8
 staOpcode (StaIY  w8)  = 0x91 : encodeWord8   w8
+
+adcOpcode :: Adc -> [Word8]
+adcOpcode (AdcI   w8)  = 0x69 : encodeWord8   w8
+adcOpcode (AdcZ   w8)  = 0x65 : encodeWord8   w8
+adcOpcode (AdcZX  w8)  = 0x75 : encodeWord8   w8
+adcOpcode (AdcA  w16)  = 0x6D : encodeWord16 w16
+adcOpcode (AdcAX w16)  = 0x7D : encodeWord16 w16
+adcOpcode (AdcAY w16)  = 0x79 : encodeWord16 w16
+adcOpcode (AdcIX  w8)  = 0x61 : encodeWord8   w8
+adcOpcode (AdcIY  w8)  = 0x71 : encodeWord8   w8
 
 opsize :: Operation -> Int
 opsize = length . opcode

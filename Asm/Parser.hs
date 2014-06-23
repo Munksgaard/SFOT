@@ -127,6 +127,16 @@ sta = do
                      absoluteX StaAX, absoluteY StaAY, indirectX StaIX,
                      indirectY StaIY]
 
+adc :: Parser Operation
+adc = do
+  try $ string "ADC" >> many1 space
+  choice adcParsers
+    where
+      adcParsers = map (liftM ADC) adcParsers'
+      adcParsers' = [immediate AdcI, zeroPage AdcZ, zeroPageX AdcZX,
+                     absolute AdcA, absoluteX AdcAX, absoluteY AdcAY,
+                     indirectX AdcIX, indirectY AdcIY]
+
 inx :: Parser Operation
 inx = do
   try $ string "INX" >> notFollowedBy alphaNum
@@ -179,5 +189,5 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, inx, tax, txa, dex, tay, tya,
-             dey, iny]
+            [lda, sta, adc,
+             inx, tax, txa, dex, tay, tya, dey, iny]
