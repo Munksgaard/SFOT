@@ -11,6 +11,7 @@ type Program = [Operation]
 
 data Operation = LDA Lda
                | STA Sta
+               | INX
                  deriving (Show, Eq)
 
 data Lda = LdaI Immediate
@@ -35,6 +36,7 @@ data Sta = StaZ ByteAddr
 opcode :: Operation -> [Word8]
 opcode (LDA lda) = ldaOpcode lda
 opcode (STA sta) = staOpcode sta
+opcode INX       = [0xE8]
 
 ldaOpcode :: Lda -> [Word8]
 ldaOpcode (LdaI   w8)  = 0xA9 : encodeWord8   w8
