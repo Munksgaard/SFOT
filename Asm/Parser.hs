@@ -137,6 +137,16 @@ adc = do
                      absolute AdcA, absoluteX AdcAX, absoluteY AdcAY,
                      indirectX AdcIX, indirectY AdcIY]
 
+cmp :: Parser Operation
+cmp = do
+  try $ string "CMP" >> many1 space
+  choice cmpParsers
+    where
+      cmpParsers = map (liftM CMP) cmpParsers'
+      cmpParsers' = [immediate CmpI, zeroPage CmpZ, zeroPageX CmpZX,
+                     absolute CmpA, absoluteX CmpAX, absoluteY CmpAY,
+                     indirectX CmpIX, indirectY CmpIY]
+
 inx :: Parser Operation
 inx = do
   try $ string "INX" >> notFollowedBy alphaNum
@@ -189,5 +199,5 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc,
+            [lda, sta, adc, cmp,
              inx, tax, txa, dex, tay, tya, dey, iny]
