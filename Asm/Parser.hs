@@ -132,6 +132,11 @@ inx = do
   try $ string "INX" >> notFollowedBy alphaNum
   return INX
 
+tax :: Parser Operation
+tax = do
+  try $ string "TAX" >> notFollowedBy alphaNum
+  return TAX
+
 comment :: Parser ()
 comment = do
   char ';'
@@ -140,6 +145,6 @@ comment = do
 
 program :: Parser Program
 program = do
-  prgm <- choice [lda, sta, inx] `endBy` many (void space <|> comment)
+  prgm <- choice [lda, sta, inx, tax] `endBy` many (void space <|> comment)
   eof
   return prgm
