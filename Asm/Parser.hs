@@ -109,8 +109,7 @@ indirectY f = try $ do
 
 lda :: Parser Operation
 lda = do
-  string "LDA"
-  spaces
+  try $ string "LDA" >> spaces
   choice ldaParsers
     where
       ldaParsers = map (liftM LDA) ldaParsers'
@@ -120,8 +119,7 @@ lda = do
 
 sta :: Parser Operation
 sta = do
-  string "STA"
-  spaces
+  try $ string "STA" >> spaces
   choice staParsers
     where
       staParsers = map (liftM STA) staParsers'
