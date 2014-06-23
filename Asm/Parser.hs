@@ -137,6 +137,36 @@ tax = do
   try $ string "TAX" >> notFollowedBy alphaNum
   return TAX
 
+txa :: Parser Operation
+txa = do
+  try $ string "TXA" >> notFollowedBy alphaNum
+  return TXA
+
+dex :: Parser Operation
+dex = do
+  try $ string "DEX" >> notFollowedBy alphaNum
+  return DEX
+
+tay :: Parser Operation
+tay = do
+  try $ string "TAY" >> notFollowedBy alphaNum
+  return TAY
+
+tya :: Parser Operation
+tya = do
+  try $ string "TYA" >> notFollowedBy alphaNum
+  return TYA
+
+dey :: Parser Operation
+dey = do
+  try $ string "DEY" >> notFollowedBy alphaNum
+  return DEY
+
+iny :: Parser Operation
+iny = do
+  try $ string "INY" >> notFollowedBy alphaNum
+  return INY
+
 comment :: Parser ()
 comment = do
   char ';'
@@ -145,6 +175,9 @@ comment = do
 
 program :: Parser Program
 program = do
-  prgm <- choice [lda, sta, inx, tax] `endBy` many (void space <|> comment)
+  prgm <- choice instructionParsers`endBy` many (void space <|> comment)
   eof
   return prgm
+  where instructionParsers =
+            [lda, sta, inx, tax, txa, dex, tay, tya,
+             dey, iny]

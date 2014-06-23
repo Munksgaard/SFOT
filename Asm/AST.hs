@@ -13,6 +13,12 @@ data Operation = LDA Lda
                | STA Sta
                | INX
                | TAX
+               | TXA
+               | DEX
+               | TAY
+               | TYA
+               | DEY
+               | INY
                  deriving (Show, Eq)
 
 data Lda = LdaI Immediate
@@ -39,6 +45,12 @@ opcode (LDA lda) = ldaOpcode lda
 opcode (STA sta) = staOpcode sta
 opcode INX       = [0xE8]
 opcode TAX       = [0xAA]
+opcode TXA       = [0x8A]
+opcode DEX       = [0xCA]
+opcode TAY       = [0xA8]
+opcode TYA       = [0x98]
+opcode DEY       = [0x88]
+opcode INY       = [0xC8]
 
 ldaOpcode :: Lda -> [Word8]
 ldaOpcode (LdaI   w8)  = 0xA9 : encodeWord8   w8
