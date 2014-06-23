@@ -1,6 +1,7 @@
 module SFOT.Asm.AST where
 
 import Data.Word
+import Data.Bits
 
 type ByteAddr = Word8
 type Immediate = Word8
@@ -31,48 +32,34 @@ data Sta = StaZ ByteAddr
          | StaIY ByteAddr
            deriving (Show, Eq)
 
-opcode :: Operation -> Int
+opcode :: Operation -> [Word8]
 opcode (LDA lda) = ldaOpcode lda
 opcode (STA sta) = staOpcode sta
 
-ldaOpcode :: Lda -> Int
-ldaOpcode (LdaI _)   = 0xA9
-ldaOpcode (LdaZ _)   = 0xA5
-ldaOpcode (LdaZX _)  = 0xB5
-ldaOpcode (LdaA _)   = 0xAD
-ldaOpcode (LdaAX _)  = 0xBD
-ldaOpcode (LdaAY _)  = 0xB9
-ldaOpcode (LdaIX _)  = 0xA1
-ldaOpcode (LdaIY _)  = 0xB1
+ldaOpcode :: Lda -> [Word8]
+ldaOpcode (LdaI   w8)  = 0xA9 : encodeWord8   w8
+ldaOpcode (LdaZ   w8)  = 0xA5 : encodeWord8   w8
+ldaOpcode (LdaZX  w8)  = 0xB5 : encodeWord8   w8
+ldaOpcode (LdaA  w16)  = 0xAD : encodeWord16 w16
+ldaOpcode (LdaAX w16)  = 0xBD : encodeWord16 w16
+ldaOpcode (LdaAY w16)  = 0xB9 : encodeWord16 w16
+ldaOpcode (LdaIX  w8)  = 0xA1 : encodeWord8   w8
+ldaOpcode (LdaIY  w8)  = 0xB1 : encodeWord8   w8
 
-staOpcode :: Sta -> Int
-staOpcode (StaZ _)   = 0x85
-staOpcode (StaZX _)  = 0x95
-staOpcode (StaA _)   = 0x8D
-staOpcode (StaAX _)  = 0x9D
-staOpcode (StaAY _)  = 0x99
-staOpcode (StaIX _)  = 0x81
-staOpcode (StaIY _)  = 0x91
+staOpcode :: Sta -> [Word8]
+staOpcode (StaZ   w8)  = 0x85 : encodeWord8   w8
+staOpcode (StaZX  w8)  = 0x95 : encodeWord8   w8
+staOpcode (StaA  w16)  = 0x8D : encodeWord16 w16
+staOpcode (StaAX w16)  = 0x9D : encodeWord16 w16
+staOpcode (StaAY w16)  = 0x99 : encodeWord16 w16
+staOpcode (StaIX  w8)  = 0x81 : encodeWord8   w8
+staOpcode (StaIY  w8)  = 0x91 : encodeWord8   w8
 
 opsize :: Operation -> Int
-opsize (LDA lda) = ldaOpsize lda
-opsize (STA sta) = staOpsize sta
+opsize = length . opcode
 
-ldaOpsize :: Lda -> Int
-ldaOpsize (LdaI _)   = 2
-ldaOpsize (LdaZ _)   = 2
-ldaOpsize (LdaZX _)  = 2
-ldaOpsize (LdaA _)   = 3
-ldaOpsize (LdaAX _)  = 3
-ldaOpsize (LdaAY _)  = 3
-ldaOpsize (LdaIX _)  = 2
-ldaOpsize (LdaIY _)  = 2
+encodeWord8 :: Word8 -> [Word8]
+encodeWord8 x = [x]
 
-staOpsize :: Sta -> Int
-staOpsize (StaZ _)   = 2
-staOpsize (StaZX _)  = 2
-staOpsize (StaA _)   = 3
-staOpsize (StaAX _)  = 3
-staOpsize (StaAY _)  = 3
-staOpsize (StaIX _)  = 2
-staOpsize (StaIY _)  = 2
+encodeWord16 :: Word16 -> [Word8]
+encodeWord16 x = map fromIntegral [ x .&. 0xFF, (x .&. 0xFF00) `shiftR` 8 ]
