@@ -2,10 +2,14 @@ module SFOT.Asm.AST where
 
 import Data.Word
 import Data.Bits
+import Data.Int
+import Numeric
 
 type ByteAddr = Word8
 type Immediate = Word8
 type WordAddr = Word16
+
+data ShortJump =  ShortLabel String | RelAddr Int8 deriving (Show, Eq)
 
 type Program = [Operation]
 
@@ -13,6 +17,7 @@ data Operation = LDA Lda
                | STA Sta
                | ADC Adc
                | CMP Cmp
+               | BEQ ShortJump
                | INX
                | TAX
                | TXA
@@ -21,6 +26,7 @@ data Operation = LDA Lda
                | TYA
                | DEY
                | INY
+               | Label String
                  deriving (Show, Eq)
 
 data Lda = LdaI Immediate
@@ -75,6 +81,9 @@ opcode TAY       = [0xA8]
 opcode TYA       = [0x98]
 opcode DEY       = [0x88]
 opcode INY       = [0xC8]
+opcode (BEQ (RelAddr w8)) = [0xF0, fromIntegral w8]
+opcode (Label _) = []
+opcode x         = error $ "Error: " ++ show x
 
 ldaOpcode :: Lda -> [Word8]
 ldaOpcode (LdaI   w8)  = 0xA9 : encodeWord8   w8
@@ -116,7 +125,8 @@ cmpOpcode (CmpIX  w8)  = 0xC1 : encodeWord8   w8
 cmpOpcode (CmpIY  w8)  = 0xD1 : encodeWord8   w8
 
 opsize :: Operation -> Int
-opsize = length . opcode
+opsize (BEQ _) = 2
+opsize op = length $ opcode op
 
 encodeWord8 :: Word8 -> [Word8]
 encodeWord8 x = [x]
