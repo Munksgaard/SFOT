@@ -133,3 +133,6 @@ encodeWord8 x = [x]
 
 encodeWord16 :: Word16 -> [Word8]
 encodeWord16 x = map fromIntegral [ x .&. 0xFF, (x .&. 0xFF00) `shiftR` 8 ]
+
+printHex :: [Word8] -> [String]
+printHex = map (`showHex` "")
