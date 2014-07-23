@@ -4,9 +4,23 @@ module SFOT.Asm.Parser where
 
 import SFOT.Asm.AST
 
-import Text.ParserCombinators.Parsec
+import Text.ParserCombinators.Parsec hiding (Parser, token, label, labels)
+
+import Data.Word
+import Data.List
 
 import Control.Monad
+import Data.Maybe
+
+type Parser = GenParser Char [String]
+
+reservedWords = ["ADC", "AND", "ASL", "BCC", "BCS", "BEQ", "BIT", "BMI", "BNE",
+                 "BPL", "BRK", "BVC", "BVS", "CLC", "CLD", "CLI", "CLV", "CMP",
+                 "CPX", "CPY", "DEC", "DEX", "DEY", "EOR", "INC", "INX", "INY",
+                 "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "NOP", "ORA", "PHA",
+                 "PHP", "PLA", "PLP", "ROL", "ROR", "RTI", "RTS", "SBC", "SEC",
+                 "SED", "SEI", "STA", "STX", "STY", "TAX", "TAY", "TSX", "TXA",
+                 "TXS", "TYA"]
 
 dec ::  Parser Int
 dec = do
@@ -38,12 +52,34 @@ wordAddr = do
   else
       fail "Only supports 16 bit addresses"
 
+comment :: Parser ()
+comment = do
+  char ';'
+  manyTill anyChar (void newline <|> eof)
+  return ()
+
+whitespace :: Parser ()
+whitespace = skipMany (skipMany1 space <|> comment)
+
+token :: String -> Parser ()
+token s = try $ string s >> notFollowedBy (alphaNum <|> char '_') >> skipMany space
+
+startPar :: Parser ()
+startPar = char '(' >> spaces
+
+endPar :: Parser ()
+endPar = char ')' >> spaces
+
+parens :: Parser a -> Parser a
+parens = between startPar endPar
+
 commaRegister :: Char -> Parser ()
 commaRegister c = do
   spaces
   char ','
   spaces
   char c
+  notFollowedBy (alphaNum <|> char '_')
   return ()
 
 immediate :: (ByteAddr -> a) -> Parser a
@@ -85,31 +121,21 @@ absoluteY f = try $ do
   commaRegister 'Y'
   return $ f num
 
-startIndirect :: Parser ByteAddr
-startIndirect = do
-  char '('
-  spaces
-  byteAddr
-
 indirectX :: (ByteAddr -> a) -> Parser a
-indirectX f = try $ do
-  num <- startIndirect
+indirectX f = try $ parens $ do
+  num <- byteAddr
   commaRegister 'X'
-  spaces
-  char ')'
   return $ f num
 
 indirectY :: (ByteAddr -> a) -> Parser a
 indirectY f = try $ do
-  num <- startIndirect
-  spaces
-  char ')'
+  num <- parens byteAddr
   commaRegister 'Y'
   return $ f num
 
 lda :: Parser Operation
 lda = do
-  try $ string "LDA" >> many1 space
+  token "LDA"
   choice ldaParsers
     where
       ldaParsers = map (liftM LDA) ldaParsers'
@@ -119,7 +145,7 @@ lda = do
 
 sta :: Parser Operation
 sta = do
-  try $ string "STA" >> many1 space
+  token "STA"
   choice staParsers
     where
       staParsers = map (liftM STA) staParsers'
@@ -129,7 +155,7 @@ sta = do
 
 adc :: Parser Operation
 adc = do
-  try $ string "ADC" >> many1 space
+  token "ADC"
   choice adcParsers
     where
       adcParsers = map (liftM ADC) adcParsers'
@@ -139,7 +165,7 @@ adc = do
 
 cmp :: Parser Operation
 cmp = do
-  try $ string "CMP" >> many1 space
+  token "CMP"
   choice cmpParsers
     where
       cmpParsers = map (liftM CMP) cmpParsers'
@@ -149,49 +175,64 @@ cmp = do
 
 inx :: Parser Operation
 inx = do
-  try $ string "INX" >> notFollowedBy alphaNum
+  token "INX"
   return INX
 
 tax :: Parser Operation
 tax = do
-  try $ string "TAX" >> notFollowedBy alphaNum
+  token "TAX"
   return TAX
 
 txa :: Parser Operation
 txa = do
-  try $ string "TXA" >> notFollowedBy alphaNum
+  token "TXA"
   return TXA
 
 dex :: Parser Operation
 dex = do
-  try $ string "DEX" >> notFollowedBy alphaNum
+  token "DEX"
   return DEX
 
 tay :: Parser Operation
 tay = do
-  try $ string "TAY" >> notFollowedBy alphaNum
+  token "TAY"
   return TAY
 
 tya :: Parser Operation
 tya = do
-  try $ string "TYA" >> notFollowedBy alphaNum
+  token "TYA"
   return TYA
 
 dey :: Parser Operation
 dey = do
-  try $ string "DEY" >> notFollowedBy alphaNum
+  token "DEY"
   return DEY
 
 iny :: Parser Operation
 iny = do
-  try $ string "INY" >> notFollowedBy alphaNum
+  token "INY"
   return INY
 
-comment :: Parser ()
-comment = do
-  char ';'
-  manyTill anyChar (void newline <|> eof)
-  return ()
+name :: Parser String
+name = do
+  c <- letter <|> char '_'
+  cs <- many $ alphaNum <|> char '_'
+  return $ c : cs
+
+label :: Parser Operation
+label = try $ do
+  s <- name
+  char ':'
+  return $ Label $ s
+
+beq :: Parser Operation
+beq = do
+  token "BEQ"
+  s <- name
+  return $ BEQ (ShortLabel s)
+
+lexeme :: Parser a -> Parser a
+lexeme p = do{ x <- p; spaces; return x  }
 
 program :: Parser Program
 program = do
@@ -199,5 +240,35 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp,
-             inx, tax, txa, dex, tay, tya, dey, iny]
+            [lda, sta, adc, cmp, beq,
+             inx, tax, txa, dex, tay, tya, dey, iny,
+             label]
+
+--resolveLabels :: Program -> Program
+--resolveLabels :: [Operation] -> [(String, Int)]
+resolveLabels :: [Operation] -> [Operation]
+resolveLabels p =
+    zipWith translateLabels p byteOffsets
+    where
+      byteOffsets = scanl (\n op -> n + opsize op) 0 p
+      labelTable = foldl findLabels [] $ zip p byteOffsets
+      --
+      findLabels labels (ins, i) =
+          case ins of
+            Label s -> case find ((== s) . fst) labels of
+                           Nothing -> (s, i) : labels
+                           _ -> error $ "Label already exists: " ++ show s
+            _ -> labels
+      --
+      shortTrans offset s =
+          if (fromIntegral relAddr :: Word8) < (0xff :: Word8) then
+              fromIntegral relAddr
+          else
+              error $ "Branch jump is too big: " ++
+                    show (fromIntegral relAddr :: Word8)
+          where
+            relAddr = labOffset - (offset + 2)
+            labOffset = fromMaybe (error $ "Label not found: " ++ show s) $ lookup s labelTable
+      --
+      translateLabels (BEQ (ShortLabel s)) offset = BEQ $ RelAddr $ shortTrans offset s
+      translateLabels inst _ = inst
