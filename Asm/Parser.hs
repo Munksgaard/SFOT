@@ -121,6 +121,11 @@ absoluteY f = try $ do
   commaRegister 'Y'
   return $ f num
 
+indirect :: (WordAddr -> a) -> Parser a
+indirect f = try $ parens $ do
+  num <- wordAddr
+  return $ f num
+
 indirectX :: (ByteAddr -> a) -> Parser a
 indirectX f = try $ parens $ do
   num <- byteAddr
@@ -231,6 +236,18 @@ beq = do
   s <- name
   return $ BEQ (ShortLabel s)
 
+jmp :: Parser Operation
+jmp = do
+  token "JMP"
+  choice [jmpInd, jmpAbs]
+    where
+      jmpAbs = do
+        s <- name
+        return $ JMP (JmpA (LongLabel s))
+      jmpInd = parens $ do
+        s <- name
+        return $ JMP (JmpI (LongLabel s))
+
 lexeme :: Parser a -> Parser a
 lexeme p = do{ x <- p; spaces; return x  }
 
@@ -240,7 +257,7 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq,
+            [lda, sta, adc, cmp, beq, jmp,
              inx, tax, txa, dex, tay, tya, dey, iny,
              label]
 
@@ -270,5 +287,10 @@ resolveLabels p =
             relAddr = labOffset - (offset + 2)
             labOffset = fromMaybe (error $ "Label not found: " ++ show s) $ lookup s labelTable
       --
+      longTrans s =
+          fromIntegral $ fromMaybe (error $ "Label not found: " ++ show s) $ lookup s labelTable
+      --
       translateLabels (BEQ (ShortLabel s)) offset = BEQ $ RelAddr $ shortTrans offset s
+      translateLabels (JMP (JmpA (LongLabel s))) _ = JMP $ JmpA $ AbsAddr $ longTrans s
+      translateLabels (JMP (JmpI (LongLabel s))) _ = JMP $ JmpI $ AbsAddr $ longTrans s
       translateLabels inst _ = inst

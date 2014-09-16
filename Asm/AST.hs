@@ -11,6 +11,8 @@ type WordAddr = Word16
 
 data ShortJump =  ShortLabel String | RelAddr Int8 deriving (Show, Eq)
 
+data LongJump = LongLabel String | AbsAddr WordAddr deriving (Show, Eq)
+
 type Program = [Operation]
 
 data Operation = LDA Lda
@@ -27,6 +29,7 @@ data Operation = LDA Lda
                | DEY
                | INY
                | Label String
+               | JMP Jmp
                  deriving (Show, Eq)
 
 data Lda = LdaI Immediate
@@ -68,6 +71,10 @@ data Cmp = CmpI  Immediate
          | CmpIY ByteAddr
            deriving (Show, Eq)
 
+data Jmp = JmpA LongJump
+         | JmpI LongJump
+           deriving (Show, Eq)
+
 opcode :: Operation -> [Word8]
 opcode (LDA lda) = ldaOpcode lda
 opcode (STA sta) = staOpcode sta
@@ -83,6 +90,7 @@ opcode DEY       = [0x88]
 opcode INY       = [0xC8]
 opcode (BEQ (RelAddr w8)) = [0xF0, fromIntegral w8]
 opcode (Label _) = []
+opcode (JMP jmp) = jmpOpcode jmp
 opcode x         = error $ "Error: " ++ show x
 
 ldaOpcode :: Lda -> [Word8]
@@ -124,8 +132,14 @@ cmpOpcode (CmpAY w16)  = 0xD9 : encodeWord16 w16
 cmpOpcode (CmpIX  w8)  = 0xC1 : encodeWord8   w8
 cmpOpcode (CmpIY  w8)  = 0xD1 : encodeWord8   w8
 
+jmpOpcode :: Jmp -> [Word8]
+jmpOpcode (JmpA (AbsAddr w16)) = 0x4C : encodeWord16 w16
+jmpOpcode (JmpI (AbsAddr w16)) = 0x6C : encodeWord16 w16
+jmpOpcode x         = error $ "Error: " ++ show x
+
 opsize :: Operation -> Int
 opsize (BEQ _) = 2
+opsize (JMP _) = 3
 opsize op = length $ opcode op
 
 encodeWord8 :: Word8 -> [Word8]
