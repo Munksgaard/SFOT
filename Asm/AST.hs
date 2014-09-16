@@ -30,6 +30,7 @@ data Operation = LDA Lda
                | INY
                | Label String
                | JMP Jmp
+               | JSR LongJump
                  deriving (Show, Eq)
 
 data Lda = LdaI Immediate
@@ -91,6 +92,7 @@ opcode INY       = [0xC8]
 opcode (BEQ (RelAddr w8)) = [0xF0, fromIntegral w8]
 opcode (Label _) = []
 opcode (JMP jmp) = jmpOpcode jmp
+opcode (JSR (AbsAddr w16)) = 0x20 : encodeWord16 w16
 opcode x         = error $ "Error: " ++ show x
 
 ldaOpcode :: Lda -> [Word8]
@@ -140,6 +142,7 @@ jmpOpcode x         = error $ "Error: " ++ show x
 opsize :: Operation -> Int
 opsize (BEQ _) = 2
 opsize (JMP _) = 3
+opsize (JSR _) = 3
 opsize op = length $ opcode op
 
 encodeWord8 :: Word8 -> [Word8]

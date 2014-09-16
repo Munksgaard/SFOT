@@ -248,6 +248,12 @@ jmp = do
         s <- name
         return $ JMP (JmpI (LongLabel s))
 
+jsr :: Parser Operation
+jsr = do
+  token "JSR"
+  s <- name
+  return $ JSR $ LongLabel s
+
 lexeme :: Parser a -> Parser a
 lexeme p = do{ x <- p; spaces; return x  }
 
@@ -257,7 +263,7 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq, jmp,
+            [lda, sta, adc, cmp, beq, jmp, jsr,
              inx, tax, txa, dex, tay, tya, dey, iny,
              label]
 
@@ -293,4 +299,5 @@ resolveLabels p =
       translateLabels (BEQ (ShortLabel s)) offset = BEQ $ RelAddr $ shortTrans offset s
       translateLabels (JMP (JmpA (LongLabel s))) _ = JMP $ JmpA $ AbsAddr $ longTrans s
       translateLabels (JMP (JmpI (LongLabel s))) _ = JMP $ JmpI $ AbsAddr $ longTrans s
+      translateLabels (JSR (LongLabel s)) _ = JSR $ AbsAddr $ longTrans s
       translateLabels inst _ = inst
