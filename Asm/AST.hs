@@ -19,6 +19,7 @@ data Operation = ADC Adc
                | AND And
                | ASL Asl
                | BCC ShortJump
+               | BCS ShortJump
                | BEQ ShortJump
                | CMP Cmp
                | DEX
@@ -102,6 +103,7 @@ opcode (ADC adc) = adcOpcode adc
 opcode (AND and) = andOpcode and
 opcode (ASL asl) = aslOpcode asl
 opcode (BCC (RelAddr w8)) = [0x90, fromIntegral w8]
+opcode (BCS (RelAddr w8)) = [0xB0, fromIntegral w8]
 opcode (BEQ (RelAddr w8)) = [0xF0, fromIntegral w8]
 opcode (CMP cmp) = cmpOpcode cmp
 opcode (JMP jmp) = jmpOpcode jmp
@@ -182,6 +184,7 @@ staOpcode (StaIY  w8)  = 0x91 : encodeWord8   w8
 
 opsize :: Operation -> Int
 opsize (BCC _) = 2
+opsize (BCS _) = 2
 opsize (BEQ _) = 2
 opsize (JMP _) = 3
 opsize (JSR _) = 3

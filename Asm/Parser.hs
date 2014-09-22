@@ -166,6 +166,12 @@ bcc = do
   s <- name
   return $ BCC (ShortLabel s)
 
+bcs :: Parser Operation
+bcs = do
+  token "BCS"
+  s <- name
+  return $ BCS (ShortLabel s)
+
 beq :: Parser Operation
 beq = do
   token "BEQ"
@@ -281,7 +287,7 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq, jmp, jsr, and, asl, bcc,
+            [lda, sta, adc, cmp, beq, jmp, jsr, and, asl, bcc, bcs,
              inx, tax, txa, dex, tay, tya, dey, iny,
              label]
 
