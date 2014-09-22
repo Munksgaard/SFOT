@@ -320,6 +320,8 @@ resolveLabels p =
       longTrans s =
           fromIntegral $ fromMaybe (error $ "Label not found: " ++ show s) $ lookup s labelTable
       --
+      translateLabels (BCC (ShortLabel s)) offset = BCC $ RelAddr $ shortTrans offset s
+      translateLabels (BCS (ShortLabel s)) offset = BCS $ RelAddr $ shortTrans offset s
       translateLabels (BEQ (ShortLabel s)) offset = BEQ $ RelAddr $ shortTrans offset s
       translateLabels (JMP (JmpA (LongLabel s))) _ = JMP $ JmpA $ AbsAddr $ longTrans s
       translateLabels (JMP (JmpI (LongLabel s))) _ = JMP $ JmpI $ AbsAddr $ longTrans s
