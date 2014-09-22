@@ -15,8 +15,8 @@ import Data.Maybe
 
 type Parser = GenParser Char [String]
 
-dec ::  Parser Int
-dec = do
+decimal ::  Parser Int
+decimal = do
   cs <- many1 digit
   return $ read cs
 
@@ -27,7 +27,7 @@ hex = do
   return $ read $ "0x" ++ cs
 
 number :: Parser Int
-number = hex <|> dec
+number = hex <|> decimal
 
 byteAddr :: Parser ByteAddr
 byteAddr = do
