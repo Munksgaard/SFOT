@@ -8,6 +8,7 @@ import Text.ParserCombinators.Parsec hiding (Parser, token, label, labels)
 
 import Prelude hiding (and)
 import Data.Word
+import Data.Char (toLower)
 import Data.List (find)
 
 import Control.Monad
@@ -55,7 +56,8 @@ whitespace :: Parser ()
 whitespace = skipMany (skipMany1 space <|> comment)
 
 token :: String -> Parser ()
-token s = try $ string s >> notFollowedBy (alphaNum <|> char '_') >> skipMany space
+token s = try $ (string s <|> string (map toLower s))
+                 >> notFollowedBy (alphaNum <|> char '_') >> skipMany space
 
 startPar :: Parser ()
 startPar = char '(' >> spaces
@@ -71,7 +73,7 @@ commaRegister c = do
   spaces
   char ','
   spaces
-  char c
+  char c <|> char (toLower c)
   notFollowedBy (alphaNum <|> char '_')
   return ()
 
