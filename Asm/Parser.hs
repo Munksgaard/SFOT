@@ -160,6 +160,12 @@ asl = do
       aslParsers' = [zeroPage AslZ, zeroPageX AslZX,
                      absolute AslA, absoluteX AslAX, return AslAc]
 
+bcc :: Parser Operation
+bcc = do
+  token "BCC"
+  s <- name
+  return $ BCC (ShortLabel s)
+
 beq :: Parser Operation
 beq = do
   token "BEQ"
@@ -275,7 +281,7 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq, jmp, jsr, and, asl,
+            [lda, sta, adc, cmp, beq, jmp, jsr, and, asl, bcc,
              inx, tax, txa, dex, tay, tya, dey, iny,
              label]
 
