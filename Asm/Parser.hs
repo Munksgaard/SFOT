@@ -231,7 +231,7 @@ label :: Parser Operation
 label = try $ do
   s <- name
   char ':'
-  return $ Label $ s
+  return $ Label s
 
 beq :: Parser Operation
 beq = do
