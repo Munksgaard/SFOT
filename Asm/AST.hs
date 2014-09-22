@@ -17,6 +17,7 @@ type Program = [Operation]
 
 data Operation = ADC Adc
                | AND And
+               | ASL Asl
                | BEQ ShortJump
                | CMP Cmp
                | DEX
@@ -55,6 +56,13 @@ data And = AndI  Immediate
          | AndIY ByteAddr
            deriving (Show, Eq)
 
+data Asl = AslAc
+         | AslZ  ByteAddr
+         | AslZX ByteAddr
+         | AslA  WordAddr
+         | AslAX WordAddr
+           deriving (Show, Eq)
+
 data Cmp = CmpI  Immediate
          | CmpZ  ByteAddr
          | CmpZX ByteAddr
@@ -91,6 +99,7 @@ data Sta = StaZ ByteAddr
 opcode :: Operation -> [Word8]
 opcode (ADC adc) = adcOpcode adc
 opcode (AND and) = andOpcode and
+opcode (ASL asl) = aslOpcode asl
 opcode (BEQ (RelAddr w8)) = [0xF0, fromIntegral w8]
 opcode (CMP cmp) = cmpOpcode cmp
 opcode (JMP jmp) = jmpOpcode jmp
@@ -127,6 +136,13 @@ andOpcode (AndAX w16)  = 0x3D : encodeWord16 w16
 andOpcode (AndAY w16)  = 0x39 : encodeWord16 w16
 andOpcode (AndIX  w8)  = 0x21 : encodeWord8   w8
 andOpcode (AndIY  w8)  = 0x31 : encodeWord8   w8
+
+aslOpcode :: Asl -> [Word8]
+aslOpcode AslAc        = 0x0A : []
+aslOpcode (AslZ   w8)  = 0x06 : encodeWord8   w8
+aslOpcode (AslZX  w8)  = 0x16 : encodeWord8   w8
+aslOpcode (AslA  w16)  = 0x0E : encodeWord16 w16
+aslOpcode (AslAX w16)  = 0x1E : encodeWord16 w16
 
 cmpOpcode :: Cmp -> [Word8]
 cmpOpcode (CmpI   w8)  = 0xC9 : encodeWord8   w8

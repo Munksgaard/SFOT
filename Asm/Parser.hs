@@ -151,6 +151,15 @@ and = do
                      absolute AndA, absoluteX AndAX, absoluteY AndAY,
                      indirectX AndIX, indirectY AndIY]
 
+asl :: Parser Operation
+asl = do
+  token "ASL"
+  choice aslParsers
+    where
+      aslParsers = map (liftM ASL) aslParsers'
+      aslParsers' = [zeroPage AslZ, zeroPageX AslZX,
+                     absolute AslA, absoluteX AslAX, return AslAc]
+
 cmp :: Parser Operation
 cmp = do
   token "CMP"
@@ -266,7 +275,7 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq, jmp, jsr, and,
+            [lda, sta, adc, cmp, beq, jmp, jsr, and, asl,
              inx, tax, txa, dex, tay, tya, dey, iny,
              label]
 
