@@ -138,26 +138,6 @@ indirectY f = try $ do
   commaRegister 'Y'
   return $ f num
 
-lda :: Parser Operation
-lda = do
-  token "LDA"
-  choice ldaParsers
-    where
-      ldaParsers = map (liftM LDA) ldaParsers'
-      ldaParsers' = [immediate LdaI, zeroPage LdaZ, zeroPageX LdaZX,
-                     absolute LdaA, absoluteX LdaAX, absoluteY LdaAY,
-                     indirectX LdaIX, indirectY LdaIY]
-
-sta :: Parser Operation
-sta = do
-  token "STA"
-  choice staParsers
-    where
-      staParsers = map (liftM STA) staParsers'
-      staParsers' = [zeroPage StaZ, zeroPageX StaZX, absolute StaA,
-                     absoluteX StaAX, absoluteY StaAY, indirectX StaIX,
-                     indirectY StaIY]
-
 adc :: Parser Operation
 adc = do
   token "ADC"
@@ -178,45 +158,65 @@ cmp = do
                      absolute CmpA, absoluteX CmpAX, absoluteY CmpAY,
                      indirectX CmpIX, indirectY CmpIY]
 
-inx :: Parser Operation
-inx = do
-  token "INX"
-  return INX
-
-tax :: Parser Operation
-tax = do
-  token "TAX"
-  return TAX
-
-txa :: Parser Operation
-txa = do
-  token "TXA"
-  return TXA
-
 dex :: Parser Operation
 dex = do
   token "DEX"
   return DEX
-
-tay :: Parser Operation
-tay = do
-  token "TAY"
-  return TAY
-
-tya :: Parser Operation
-tya = do
-  token "TYA"
-  return TYA
 
 dey :: Parser Operation
 dey = do
   token "DEY"
   return DEY
 
+inx :: Parser Operation
+inx = do
+  token "INX"
+  return INX
+
 iny :: Parser Operation
 iny = do
   token "INY"
   return INY
+
+lda :: Parser Operation
+lda = do
+  token "LDA"
+  choice ldaParsers
+    where
+      ldaParsers = map (liftM LDA) ldaParsers'
+      ldaParsers' = [immediate LdaI, zeroPage LdaZ, zeroPageX LdaZX,
+                     absolute LdaA, absoluteX LdaAX, absoluteY LdaAY,
+                     indirectX LdaIX, indirectY LdaIY]
+
+sta :: Parser Operation
+sta = do
+  token "STA"
+  choice staParsers
+    where
+      staParsers = map (liftM STA) staParsers'
+      staParsers' = [zeroPage StaZ, zeroPageX StaZX, absolute StaA,
+                     absoluteX StaAX, absoluteY StaAY, indirectX StaIX,
+                     indirectY StaIY]
+
+tax :: Parser Operation
+tax = do
+  token "TAX"
+  return TAX
+
+tay :: Parser Operation
+tay = do
+  token "TAY"
+  return TAY
+
+txa :: Parser Operation
+txa = do
+  token "TXA"
+  return TXA
+
+tya :: Parser Operation
+tya = do
+  token "TYA"
+  return TYA
 
 name :: Parser String
 name = do
