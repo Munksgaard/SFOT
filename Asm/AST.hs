@@ -97,24 +97,24 @@ opcode TYA       = [0x98]
 opcode x         = error $ "Error: " ++ show x
 
 adcOpcode :: Adc -> [Word8]
+adcOpcode (AdcI   w8)  = 0x69 : encodeWord8   w8
+adcOpcode (AdcZ   w8)  = 0x65 : encodeWord8   w8
+adcOpcode (AdcZX  w8)  = 0x75 : encodeWord8   w8
 adcOpcode (AdcA  w16)  = 0x6D : encodeWord16 w16
 adcOpcode (AdcAX w16)  = 0x7D : encodeWord16 w16
 adcOpcode (AdcAY w16)  = 0x79 : encodeWord16 w16
-adcOpcode (AdcI   w8)  = 0x69 : encodeWord8   w8
 adcOpcode (AdcIX  w8)  = 0x61 : encodeWord8   w8
 adcOpcode (AdcIY  w8)  = 0x71 : encodeWord8   w8
-adcOpcode (AdcZ   w8)  = 0x65 : encodeWord8   w8
-adcOpcode (AdcZX  w8)  = 0x75 : encodeWord8   w8
 
 cmpOpcode :: Cmp -> [Word8]
+cmpOpcode (CmpI   w8)  = 0xC9 : encodeWord8   w8
+cmpOpcode (CmpZ   w8)  = 0xC5 : encodeWord8   w8
+cmpOpcode (CmpZX  w8)  = 0xD5 : encodeWord8   w8
 cmpOpcode (CmpA  w16)  = 0xCD : encodeWord16 w16
 cmpOpcode (CmpAX w16)  = 0xDD : encodeWord16 w16
 cmpOpcode (CmpAY w16)  = 0xD9 : encodeWord16 w16
-cmpOpcode (CmpI   w8)  = 0xC9 : encodeWord8   w8
 cmpOpcode (CmpIX  w8)  = 0xC1 : encodeWord8   w8
 cmpOpcode (CmpIY  w8)  = 0xD1 : encodeWord8   w8
-cmpOpcode (CmpZ   w8)  = 0xC5 : encodeWord8   w8
-cmpOpcode (CmpZX  w8)  = 0xD5 : encodeWord8   w8
 
 jmpOpcode :: Jmp -> [Word8]
 jmpOpcode (JmpA (AbsAddr w16)) = 0x4C : encodeWord16 w16
@@ -122,23 +122,23 @@ jmpOpcode (JmpI (AbsAddr w16)) = 0x6C : encodeWord16 w16
 jmpOpcode x         = error $ "Error: " ++ show x
 
 ldaOpcode :: Lda -> [Word8]
+ldaOpcode (LdaI   w8)  = 0xA9 : encodeWord8   w8
+ldaOpcode (LdaZ   w8)  = 0xA5 : encodeWord8   w8
+ldaOpcode (LdaZX  w8)  = 0xB5 : encodeWord8   w8
 ldaOpcode (LdaA  w16)  = 0xAD : encodeWord16 w16
 ldaOpcode (LdaAX w16)  = 0xBD : encodeWord16 w16
 ldaOpcode (LdaAY w16)  = 0xB9 : encodeWord16 w16
-ldaOpcode (LdaI   w8)  = 0xA9 : encodeWord8   w8
 ldaOpcode (LdaIX  w8)  = 0xA1 : encodeWord8   w8
 ldaOpcode (LdaIY  w8)  = 0xB1 : encodeWord8   w8
-ldaOpcode (LdaZ   w8)  = 0xA5 : encodeWord8   w8
-ldaOpcode (LdaZX  w8)  = 0xB5 : encodeWord8   w8
 
 staOpcode :: Sta -> [Word8]
+staOpcode (StaZ   w8)  = 0x85 : encodeWord8   w8
+staOpcode (StaZX  w8)  = 0x95 : encodeWord8   w8
 staOpcode (StaA  w16)  = 0x8D : encodeWord16 w16
 staOpcode (StaAX w16)  = 0x9D : encodeWord16 w16
 staOpcode (StaAY w16)  = 0x99 : encodeWord16 w16
 staOpcode (StaIX  w8)  = 0x81 : encodeWord8   w8
 staOpcode (StaIY  w8)  = 0x91 : encodeWord8   w8
-staOpcode (StaZ   w8)  = 0x85 : encodeWord8   w8
-staOpcode (StaZX  w8)  = 0x95 : encodeWord8   w8
 
 opsize :: Operation -> Int
 opsize (BEQ _) = 2
