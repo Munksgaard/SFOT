@@ -546,10 +546,8 @@ program = do
              rol, ror, rti, rts, sbc, sec, sed, sei, sta, stx, sty, tax, tsx,
              txa, txs, dex, tay, tya]
 
---resolveLabels :: Program -> Program
---resolveLabels :: [Operation] -> [(String, Int)]
-resolveLabels :: [Operation] -> [Operation]
-resolveLabels p =
+resolveLabels :: Int -> [Operation] -> [Operation]
+resolveLabels programOffset p =
     zipWith translateLabels p byteOffsets
     where
       byteOffsets = scanl (\n op -> n + opsize op) 0 p
@@ -573,7 +571,9 @@ resolveLabels p =
             labOffset = fromMaybe (error $ "Label not found: " ++ show s) $ lookup s labelTable
       --
       longTrans s =
-          fromIntegral $ fromMaybe (error $ "Label not found: " ++ show s) $ lookup s labelTable
+          fromIntegral $ fromMaybe (error $ "Label not found: " ++ show s)
+          (lookup s labelTable)
+          + programOffset
       --
       translateLabels (BCC (ShortLabel s)) offset = BCC $ RelAddr $ shortTrans offset s
       translateLabels (BCS (ShortLabel s)) offset = BCS $ RelAddr $ shortTrans offset s
