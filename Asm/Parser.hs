@@ -96,6 +96,12 @@ zeroPageX f = try $ do
   commaRegister 'X'
   return $ f num
 
+zeroPageY :: (ByteAddr -> a) -> Parser a
+zeroPageY f = try $ do
+  num <- byteAddr
+  commaRegister 'Y'
+  return $ f num
+
 absolute :: (WordAddr -> a) -> Parser a
 absolute f = try $ do
   num <- wordAddr
@@ -178,6 +184,69 @@ beq = do
   s <- name
   return $ BEQ (ShortLabel s)
 
+bit :: Parser Operation
+bit = do
+  token "BIT"
+  choice bitParsers
+    where
+      bitParsers = map (liftM BIT) bitParsers'
+      bitParsers' = [zeroPage BitZ, absolute BitA]
+
+bmi :: Parser Operation
+bmi = do
+  token "BMI"
+  s <- name
+  return $ BMI (ShortLabel s)
+
+bne :: Parser Operation
+bne = do
+  token "BNE"
+  s <- name
+  return $ BNE (ShortLabel s)
+
+bpl :: Parser Operation
+bpl = do
+  token "BPL"
+  s <- name
+  return $ BPL (ShortLabel s)
+
+brk :: Parser Operation
+brk = do
+  token "BRK"
+  return BRK
+
+bvc :: Parser Operation
+bvc = do
+  token "BVC"
+  s <- name
+  return $ BVC (ShortLabel s)
+
+bvs :: Parser Operation
+bvs = do
+  token "BVS"
+  s <- name
+  return $ BVS (ShortLabel s)
+
+clc :: Parser Operation
+clc = do
+  token "CLC"
+  return CLC
+
+cld :: Parser Operation
+cld = do
+  token "CLD"
+  return CLD
+
+cli :: Parser Operation
+cli = do
+  token "CLI"
+  return CLI
+
+clv :: Parser Operation
+clv = do
+  token "CLV"
+  return CLV
+
 cmp :: Parser Operation
 cmp = do
   token "CMP"
@@ -188,6 +257,30 @@ cmp = do
                      absolute CmpA, absoluteX CmpAX, absoluteY CmpAY,
                      indirectX CmpIX, indirectY CmpIY]
 
+cpx :: Parser Operation
+cpx = do
+  token "CPX"
+  choice cpxParsers
+    where
+      cpxParsers = map (liftM CPX) cpxParsers'
+      cpxParsers' = [immediate CpxI, zeroPage CpxZ, absolute CpxA]
+
+cpy :: Parser Operation
+cpy = do
+  token "CPY"
+  choice cpyParsers
+    where
+      cpyParsers = map (liftM CPY) cpyParsers'
+      cpyParsers' = [immediate CpyI, zeroPage CpyZ, absolute CpyA]
+
+dec :: Parser Operation
+dec = do
+  token "DEC"
+  choice decParsers
+    where
+      decParsers = map (liftM DEC) decParsers'
+      decParsers' = [zeroPage DecZ, zeroPageX DecZX, absolute DecA, absoluteX DecAX]
+
 dex :: Parser Operation
 dex = do
   token "DEX"
@@ -197,6 +290,25 @@ dey :: Parser Operation
 dey = do
   token "DEY"
   return DEY
+
+eor :: Parser Operation
+eor = do
+  token "EOR"
+  choice eorParsers
+    where
+      eorParsers = map (liftM EOR) eorParsers'
+      eorParsers' = [immediate EorI, zeroPage EorZ, zeroPageX EorZX,
+                     absolute EorA, absoluteX EorAX, absoluteY EorAY,
+                     indirectX EorIX, indirectY EorIY]
+
+inc :: Parser Operation
+inc = do
+  token "INC"
+  choice incParsers
+    where
+      incParsers = map (liftM INC) incParsers'
+      incParsers' = [zeroPage IncZ, zeroPageX IncZX,
+                     absolute IncA, absoluteX IncAX]
 
 inx :: Parser Operation
 inx = do
@@ -236,6 +348,121 @@ lda = do
                      absolute LdaA, absoluteX LdaAX, absoluteY LdaAY,
                      indirectX LdaIX, indirectY LdaIY]
 
+ldx :: Parser Operation
+ldx = do
+  token "LDX"
+  choice ldxParsers
+    where
+      ldxParsers = map (liftM LDX) ldxParsers'
+      ldxParsers' = [immediate LdxI, zeroPage LdxZ, zeroPageY LdxZY,
+                     absolute LdxA, absoluteY LdxAY]
+
+ldy :: Parser Operation
+ldy = do
+  token "LDY"
+  choice ldyParsers
+    where
+      ldyParsers = map (liftM LDY) ldyParsers'
+      ldyParsers' = [immediate LdyI, zeroPage LdyZ, zeroPageX LdyZX,
+                     absolute LdyA, absoluteX LdyAX]
+
+lsr :: Parser Operation
+lsr = do
+  token "LSR"
+  choice lsrParsers
+    where
+      lsrParsers = map (liftM LSR) lsrParsers'
+      lsrParsers' = [zeroPage LsrZ, zeroPageX LsrZX,
+                     absolute LsrA, absoluteX LsrAX, return LsrAc]
+
+ora :: Parser Operation
+ora = do
+  token "ORA"
+  choice oraParsers
+    where
+      oraParsers = map (liftM ORA) oraParsers'
+      oraParsers' = [immediate OraI, zeroPage OraZ, zeroPageX OraZX,
+                     absolute OraA, absoluteX OraAX, absoluteY OraAY,
+                     indirectX OraIX, indirectY OraIY]
+
+nop :: Parser Operation
+nop = do
+  token "NOP"
+  return NOP
+
+pha :: Parser Operation
+pha = do
+  token "PHA"
+  return PHA
+
+php :: Parser Operation
+php = do
+  token "PHP"
+  return PHP
+
+pla :: Parser Operation
+pla = do
+  token "PLA"
+  return PLA
+
+plp :: Parser Operation
+plp = do
+  token "PLP"
+  return PLP
+
+rol :: Parser Operation
+rol = do
+  token "ROL"
+  choice rolParsers
+    where
+      rolParsers = map (liftM ROL) rolParsers'
+      rolParsers' = [zeroPage RolZ, zeroPageX RolZX, absolute RolA,
+                     absoluteX RolAX, return RolAc]
+
+ror :: Parser Operation
+ror = do
+  token "ROR"
+  choice rorParsers
+    where
+      rorParsers = map (liftM ROR) rorParsers'
+      rorParsers' = [zeroPage RorZ, zeroPageX RorZX, absolute RorA,
+                     absoluteX RorAX, return RorAc]
+
+rti :: Parser Operation
+rti = do
+  token "RTI"
+  return RTI
+
+rts :: Parser Operation
+rts = do
+  token "RTS"
+  return RTS
+
+sbc :: Parser Operation
+sbc = do
+  token "SBC"
+  choice sbcParsers
+    where
+      sbcParsers = map (liftM SBC) sbcParsers'
+      sbcParsers' = [immediate SbcI, zeroPage SbcZ, zeroPageX SbcZX,
+                     absolute SbcA, absoluteX SbcAX, absoluteY SbcAY,
+                     indirectX SbcIX, indirectY SbcIY]
+
+sec :: Parser Operation
+sec = do
+  token "SEC"
+  return SEC
+
+sed :: Parser Operation
+sed = do
+  token "SED"
+  return SED
+
+sei :: Parser Operation
+sei = do
+  token "SEI"
+  return SEI
+
 sta :: Parser Operation
 sta = do
   token "STA"
@@ -245,6 +472,22 @@ sta = do
       staParsers' = [zeroPage StaZ, zeroPageX StaZX, absolute StaA,
                      absoluteX StaAX, absoluteY StaAY, indirectX StaIX,
                      indirectY StaIY]
+
+stx :: Parser Operation
+stx = do
+  token "STX"
+  choice stxParsers
+    where
+      stxParsers = map (liftM STX) stxParsers'
+      stxParsers' = [zeroPage StxZ, zeroPageY StxZY, absolute StxA]
+
+sty :: Parser Operation
+sty = do
+  token "STY"
+  choice styParsers
+    where
+      styParsers = map (liftM STY) styParsers'
+      styParsers' = [zeroPage StyZ, zeroPageX StyZX, absolute StyA]
 
 tax :: Parser Operation
 tax = do
@@ -256,10 +499,20 @@ tay = do
   token "TAY"
   return TAY
 
+tsx :: Parser Operation
+tsx = do
+  token "TSX"
+  return TSX
+
 txa :: Parser Operation
 txa = do
   token "TXA"
   return TXA
+
+txs :: Parser Operation
+txs = do
+  token "TXS"
+  return TXS
 
 tya :: Parser Operation
 tya = do
@@ -287,9 +540,11 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq, jmp, jsr, and, asl, bcc, bcs,
-             inx, tax, txa, dex, tay, tya, dey, iny,
-             label]
+            [adc, and, asl, bcc, bcs, beq, bit, bmi, bne, bpl, brk, bvc, bvs,
+             clc, cld, cli, clv, cmp, cpx, cpy, dec, dey, eor, inc, inx, iny,
+             jmp, jsr, label, lda, ldx, ldy, lsr, nop, ora, pha, php, pla, plp,
+             rol, ror, rti, rts, sbc, sec, sed, sei, sta, stx, sty, tax, tsx,
+             txa, txs, dex, tay, tya]
 
 --resolveLabels :: Program -> Program
 --resolveLabels :: [Operation] -> [(String, Int)]
@@ -323,6 +578,11 @@ resolveLabels p =
       translateLabels (BCC (ShortLabel s)) offset = BCC $ RelAddr $ shortTrans offset s
       translateLabels (BCS (ShortLabel s)) offset = BCS $ RelAddr $ shortTrans offset s
       translateLabels (BEQ (ShortLabel s)) offset = BEQ $ RelAddr $ shortTrans offset s
+      translateLabels (BMI (ShortLabel s)) offset = BMI $ RelAddr $ shortTrans offset s
+      translateLabels (BNE (ShortLabel s)) offset = BNE $ RelAddr $ shortTrans offset s
+      translateLabels (BPL (ShortLabel s)) offset = BPL $ RelAddr $ shortTrans offset s
+      translateLabels (BVC (ShortLabel s)) offset = BVC $ RelAddr $ shortTrans offset s
+      translateLabels (BVS (ShortLabel s)) offset = BVS $ RelAddr $ shortTrans offset s
       translateLabels (JMP (JmpA (LongLabel s))) _ = JMP $ JmpA $ AbsAddr $ longTrans s
       translateLabels (JMP (JmpI (LongLabel s))) _ = JMP $ JmpI $ AbsAddr $ longTrans s
       translateLabels (JSR (LongLabel s)) _ = JSR $ AbsAddr $ longTrans s
