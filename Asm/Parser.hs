@@ -160,6 +160,12 @@ asl = do
       aslParsers' = [zeroPage AslZ, zeroPageX AslZX,
                      absolute AslA, absoluteX AslAX, return AslAc]
 
+beq :: Parser Operation
+beq = do
+  token "BEQ"
+  s <- name
+  return $ BEQ (ShortLabel s)
+
 cmp :: Parser Operation
 cmp = do
   token "CMP"
@@ -189,6 +195,24 @@ iny :: Parser Operation
 iny = do
   token "INY"
   return INY
+
+jmp :: Parser Operation
+jmp = do
+  token "JMP"
+  choice [jmpInd, jmpAbs]
+    where
+      jmpAbs = do
+        s <- name
+        return $ JMP (JmpA (LongLabel s))
+      jmpInd = parens $ do
+        s <- name
+        return $ JMP (JmpI (LongLabel s))
+
+jsr :: Parser Operation
+jsr = do
+  token "JSR"
+  s <- name
+  return $ JSR $ LongLabel s
 
 lda :: Parser Operation
 lda = do
@@ -241,30 +265,6 @@ label = try $ do
   s <- name
   char ':'
   return $ Label s
-
-beq :: Parser Operation
-beq = do
-  token "BEQ"
-  s <- name
-  return $ BEQ (ShortLabel s)
-
-jmp :: Parser Operation
-jmp = do
-  token "JMP"
-  choice [jmpInd, jmpAbs]
-    where
-      jmpAbs = do
-        s <- name
-        return $ JMP (JmpA (LongLabel s))
-      jmpInd = parens $ do
-        s <- name
-        return $ JMP (JmpI (LongLabel s))
-
-jsr :: Parser Operation
-jsr = do
-  token "JSR"
-  s <- name
-  return $ JSR $ LongLabel s
 
 lexeme :: Parser a -> Parser a
 lexeme p = do{ x <- p; spaces; return x  }
