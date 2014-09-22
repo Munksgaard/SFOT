@@ -16,6 +16,7 @@ data LongJump = LongLabel String | AbsAddr WordAddr deriving (Show, Eq)
 type Program = [Operation]
 
 data Operation = ADC Adc
+               | AND And
                | BEQ ShortJump
                | CMP Cmp
                | DEX
@@ -42,6 +43,16 @@ data Adc = AdcI  Immediate
          | AdcAY WordAddr
          | AdcIX ByteAddr
          | AdcIY ByteAddr
+           deriving (Show, Eq)
+
+data And = AndI  Immediate
+         | AndZ  ByteAddr
+         | AndZX ByteAddr
+         | AndA  WordAddr
+         | AndAX WordAddr
+         | AndAY WordAddr
+         | AndIX ByteAddr
+         | AndIY ByteAddr
            deriving (Show, Eq)
 
 data Cmp = CmpI  Immediate
@@ -79,6 +90,7 @@ data Sta = StaZ ByteAddr
 
 opcode :: Operation -> [Word8]
 opcode (ADC adc) = adcOpcode adc
+opcode (AND and) = andOpcode and
 opcode (BEQ (RelAddr w8)) = [0xF0, fromIntegral w8]
 opcode (CMP cmp) = cmpOpcode cmp
 opcode (JMP jmp) = jmpOpcode jmp
@@ -105,6 +117,16 @@ adcOpcode (AdcAX w16)  = 0x7D : encodeWord16 w16
 adcOpcode (AdcAY w16)  = 0x79 : encodeWord16 w16
 adcOpcode (AdcIX  w8)  = 0x61 : encodeWord8   w8
 adcOpcode (AdcIY  w8)  = 0x71 : encodeWord8   w8
+
+andOpcode :: And -> [Word8]
+andOpcode (AndI   w8)  = 0x29 : encodeWord8   w8
+andOpcode (AndZ   w8)  = 0x25 : encodeWord8   w8
+andOpcode (AndZX  w8)  = 0x35 : encodeWord8   w8
+andOpcode (AndA  w16)  = 0x2D : encodeWord16 w16
+andOpcode (AndAX w16)  = 0x3D : encodeWord16 w16
+andOpcode (AndAY w16)  = 0x39 : encodeWord16 w16
+andOpcode (AndIX  w8)  = 0x21 : encodeWord8   w8
+andOpcode (AndIY  w8)  = 0x31 : encodeWord8   w8
 
 cmpOpcode :: Cmp -> [Word8]
 cmpOpcode (CmpI   w8)  = 0xC9 : encodeWord8   w8

@@ -6,8 +6,9 @@ import SFOT.Asm.AST
 
 import Text.ParserCombinators.Parsec hiding (Parser, token, label, labels)
 
+import Prelude hiding (and)
 import Data.Word
-import Data.List
+import Data.List (find)
 
 import Control.Monad
 import Data.Maybe
@@ -140,6 +141,16 @@ adc = do
                      absolute AdcA, absoluteX AdcAX, absoluteY AdcAY,
                      indirectX AdcIX, indirectY AdcIY]
 
+and :: Parser Operation
+and = do
+  token "AND"
+  choice andParsers
+    where
+      andParsers = map (liftM AND) andParsers'
+      andParsers' = [immediate AndI, zeroPage AndZ, zeroPageX AndZX,
+                     absolute AndA, absoluteX AndAX, absoluteY AndAY,
+                     indirectX AndIX, indirectY AndIY]
+
 cmp :: Parser Operation
 cmp = do
   token "CMP"
@@ -255,7 +266,7 @@ program = do
   eof
   return prgm
   where instructionParsers =
-            [lda, sta, adc, cmp, beq, jmp, jsr,
+            [lda, sta, adc, cmp, beq, jmp, jsr, and,
              inx, tax, txa, dex, tay, tya, dey, iny,
              label]
 
