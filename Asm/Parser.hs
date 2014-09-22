@@ -536,7 +536,8 @@ lexeme p = do{ x <- p; spaces; return x  }
 
 program :: Parser Program
 program = do
-  prgm <- choice instructionParsers`endBy` many (void space <|> comment)
+  many (void space <|> comment)
+  prgm <- choice instructionParsers `endBy` many (void space <|> comment)
   eof
   return prgm
   where instructionParsers =
