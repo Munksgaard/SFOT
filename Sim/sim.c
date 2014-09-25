@@ -13,6 +13,7 @@
 
 #define SET_BIT(bit) status = status | bit
 #define CLEAR_BIT(bit) status = status & (bit ^ 0xFF);
+#define GET_BIT(bit) status & bit
 
 typedef unsigned char word8_t;
 typedef unsigned short int word16_t;
@@ -40,6 +41,16 @@ void set_zero(word8_t src) {
     SET_BIT(BIT1);
   else
     CLEAR_BIT(BIT1);
+}
+
+int if_zero() {
+  return GET_BIT(BIT2);
+}
+
+void s_beq() {
+  if (IF_ZERO()) {
+    pc += memory[pc-1];
+  }
 }
 
 void s_inx() {
@@ -101,6 +112,10 @@ void main_loop() {
     case 0xE8: // INX
       pc++;
       s_inx();
+      break;
+    case 0xF0: // BEQ
+      pc += 2;
+      s_beq();
       break;
     case 0x85: // STA_Z
       s_sta(addr_Z());
